@@ -1,4 +1,7 @@
-import com.typesafe.sbt.SbtStartScript
+import com.typesafe.sbt.SbtNativePackager._
+import NativePackagerKeys._
+
+packageArchetype.java_application
 
 lazy val commonSettings = Seq(
    organization := "org.bustos",
@@ -6,12 +9,11 @@ lazy val commonSettings = Seq(
    scalaVersion := "2.11.4"
 )
 
-lazy val browser = (project in file("."))
-    .settings(name := "browser")
+lazy val vueltaRiderTracker = (project in file("."))
+    .settings(name := "vueltaRiderTracker")
     .settings(commonSettings: _*)
     .settings(libraryDependencies ++= projectLibraries)
     .settings(resolvers += "Spray" at "http://repo.spray.io")
-    .enablePlugins(SbtTwirl)
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 

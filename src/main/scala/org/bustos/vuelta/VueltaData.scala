@@ -8,6 +8,7 @@ import scala.util.Properties.envOrElse
 import scala.slick.driver.MySQLDriver.simple._
 import org.joda.time._
 import spray.json._
+import scala.concurrent.duration._
 
 object VueltaData {
   case class RiderRequest(bibNumber: Int)
@@ -40,7 +41,7 @@ class VueltaData extends Actor with ActorLogging {
 
   val logger =  LoggerFactory.getLogger(getClass)
 
-  implicit val defaultTimeout = Timeout(10000)
+  implicit val defaultTimeout = Timeout(1 seconds)
 
   var riders: Map[Int, VueltaTables.Rider] = {
     val fullList = db.withSession { implicit session =>
