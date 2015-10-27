@@ -13,7 +13,7 @@ $(document).ready(function() {
     function setLocation(position) {
         latitude = position.coords.latitude;
         longitude = position.coords.longitude;
-        $('#location').text('Your location - Lat: ' + latitude.toFixed(3) + ' Longitude: ' + longitude.toFixed(3))
+        $('#location').text('Lat: ' + latitude.toFixed(3) + ' Longitude: ' + longitude.toFixed(3))
     };
 
     function getLocation() {
@@ -26,7 +26,7 @@ $(document).ready(function() {
 
     function handleBibNumberSelect() {
         var bibNumber = $('#bibNumber').val();
-        if (!isNan(bibNumber)) {
+        if (!isNaN(bibNumber)) {
             loadingTimestamp = Date.now();
             $('#runningQuery').removeClass('hide');
             getLocation();
