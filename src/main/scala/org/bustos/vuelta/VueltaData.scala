@@ -7,13 +7,12 @@ import org.slf4j.LoggerFactory
 import scala.util.Properties.envOrElse
 import scala.slick.driver.MySQLDriver.simple._
 import org.joda.time._
-import spray.json._
 import scala.concurrent.duration._
+import spray.json._
 
 object VueltaData {
-  case class RiderRequest(bibNumber: Int)
-  case class RiderUpdate(bibNumber: Int, latitude: Double, longitude: Double)
-  case class RiderConfirm(rider: Rider, update: RiderEvent)
+
+  val quarterMile = 1.0// / 60.0 / 4.0 // In degrees
 
   val db = {
     //val mysqlURL = envOrElse("VUELTA_MYSQL_URL", "jdbc:mysql://localhost:3306/vuelta")
@@ -26,30 +25,43 @@ object VueltaData {
   }
 }
 
-object VueltaDataJsonProtocol extends DefaultJsonProtocol {
-
-  import VueltaData._
-  import VueltaJsonProtocol._
-  implicit val riderUpdate = jsonFormat3(RiderUpdate)
-  implicit val riderConfirm = jsonFormat2(RiderConfirm)
-
-}
-
 class VueltaData extends Actor with ActorLogging {
 
   import VueltaData._
+  import VueltaTables._
+  import VueltaJsonProtocol._
 
   val logger =  LoggerFactory.getLogger(getClass)
 
   implicit val defaultTimeout = Timeout(1 seconds)
 
-  var riders: Map[Int, VueltaTables.Rider] = {
+  var riders: Map[Int, Rider] = {
     val fullList = db.withSession { implicit session =>
-      VueltaTables.riderTable.list.map({ x => (x.bibNumber -> Rider(x.bibNumber, x.name, x.registrationDate))})
+      riderTable.list.map({ x => (x.bibNumber -> Rider(x.bibNumber, x.name, x.registrationDate))})
     }
     fullList.toMap
   }
-  var riderEvents = Map.empty[Int, VueltaTables.RiderEvent]
+  var riderEvents = Map.empty[Int, RiderEvent]
+
+  def riderCounts: List[(RestStop, Int)] = {
+    def restStop(event: RiderEvent): RestStop = {
+      RestStops.find({ x =>
+        (x.latitude - event.latitude).abs < quarterMile && (x.longitude - event.longitude) < quarterMile
+      }) match {
+        case Some(stop) => stop
+        case _ => OffCourse
+      }
+    }
+
+    val stopsForEvents = db.withSession { implicit session =>
+      latestEventPerRider.list
+    }.map(restStop(_)).groupBy(_.name)
+
+    RestStops.map { x =>
+      if (stopsForEvents.contains(x.name)) (x, stopsForEvents(x.name).length)
+      else (x, 0)
+    }
+  }
 
   def receive = {
     case RiderRequest(bibNumber) => {
@@ -57,7 +69,7 @@ class VueltaData extends Actor with ActorLogging {
         if (riders.contains(bibNumber)) riders(bibNumber)
         else {
           val riders = db.withSession { implicit session =>
-            VueltaTables.riderTable.filter(_.bibNumber === bibNumber).list
+            riderTable.filter(_.bibNumber === bibNumber).list
           }
           if (riders.isEmpty) Rider(0, "", null)
           else riders.head
@@ -67,16 +79,21 @@ class VueltaData extends Actor with ActorLogging {
     }
     case RiderUpdate(bibNumber, latitude, longitude) =>
       val riderConfirm = {
-        if (!riders.contains(bibNumber)) RiderConfirm(Rider(0, "", null), RiderEvent(0, 0.0, 0.0, new DateTime))
+        if (!riders.contains(bibNumber)) RiderConfirm(Rider(0, "", null), RiderEvent(0, 0.0, 0.0, new DateTime(DateTimeZone.UTC)))
         else {
-          val event = RiderEvent(bibNumber, latitude, longitude, new DateTime)
+          val event = RiderEvent(bibNumber, latitude, longitude, new DateTime(DateTimeZone.UTC))
           db.withSession { implicit session =>
-            VueltaTables.riderEventTable += event
+            riderEventTable += event
           }
           logger.info(event.toString)
           RiderConfirm(riders(bibNumber), event)
         }
       }
       sender ! riderConfirm
+    case RestStopCounts => sender ! riderCounts.toJson.toString
+    case RiderUpdates => {
+      val updates: List[RiderEvent] = db.withSession { implicit session => latestEventPerRider.list }
+      sender ! updates.toJson.toString
+    }
   }
 }

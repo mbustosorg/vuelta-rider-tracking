@@ -8,11 +8,27 @@ import scala.slick.driver.MySQLDriver.simple._
 import spray.json._
 
 object VueltaTables {
+  case class RestStopCounts()
+  case class RiderUpdates()
+  case class RiderRequest(bibNumber: Int)
+  case class RiderUpdate(bibNumber: Int, latitude: Double, longitude: Double)
+  case class RestStop(name: String, latitude: Double, longitude: Double)
+  case class RiderConfirm(rider: Rider, update: RiderEvent)
   case class Rider(bibNumber: Int, name: String, registrationDate: DateTime)
   case class RiderEvent(bibNumber: Int, latitude: Double, longitude: Double, timestamp: DateTime)
 
+  val RestStops = List(
+    RestStop("Start", 37.850787, -122.258015),
+    RestStop("St Mary's", 37.838825, -122.126016),
+    RestStop("Bear Creek", 37.926135, -122.162578),
+    RestStop("Inspiration Point", 37.904802, -122.244842),
+    RestStop("End", 37.850787, -122.258015)
+  )
+  val OffCourse = RestStop("Off Course", 0.0, 0.0)
+
   val riderTable = TableQuery[RiderTable]
   val riderEventTable = TableQuery[RiderEventTable]
+  val latestEventPerRider = TableQuery[LatestEventPerRider]
 
   implicit def dateTime =
     MappedColumnType.base[DateTime, Timestamp](
@@ -34,11 +50,13 @@ object VueltaJsonProtocol extends DefaultJsonProtocol {
     }
   }
 
+  implicit val riderUpdate = jsonFormat3(RiderUpdate)
+  implicit val restStop = jsonFormat3(RestStop)
   implicit val riderFormat = jsonFormat3(Rider)
   implicit val riderEventFormat = jsonFormat4(RiderEvent)
+  implicit val riderConfirm = jsonFormat2(RiderConfirm)
 
 }
-
 
 class RiderTable(tag: Tag) extends Table[VueltaTables.Rider](tag, "rider") {
   import VueltaTables.dateTime
@@ -51,6 +69,17 @@ class RiderTable(tag: Tag) extends Table[VueltaTables.Rider](tag, "rider") {
 }
 
 class RiderEventTable(tag: Tag) extends Table[VueltaTables.RiderEvent](tag, "riderEvent") {
+  import VueltaTables.dateTime
+
+  def bibNumber = column[Int]("bibNumber")
+  def latitude = column[Double]("latitude")
+  def longitude = column[Double]("longitude")
+  def timestamp = column[DateTime]("timestamp")
+
+  def * = (bibNumber, latitude, longitude, timestamp) <> (VueltaTables.RiderEvent.tupled, VueltaTables.RiderEvent.unapply)
+}
+
+class LatestEventPerRider(tag: Tag) extends Table[VueltaTables.RiderEvent](tag, "latestEventPerRider") {
   import VueltaTables.dateTime
 
   def bibNumber = column[Int]("bibNumber")

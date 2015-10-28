@@ -12,13 +12,13 @@ import org.bustos.vuelta.VueltaData._
 import org.bustos.vuelta.VueltaTables.{Rider}
 import org.slf4j.LoggerFactory
 import spray.http.MediaTypes._
+import spray.json._
 import spray.routing._
 
 import scala.concurrent.duration._
 import scala.reflect.runtime.universe._
+import VueltaTables._
 import VueltaJsonProtocol._
-import VueltaDataJsonProtocol._
-import spray.httpx.SprayJsonSupport._
 import spray.json._
 
 class VueltaServiceActor extends HttpServiceActor with ActorLogging {
@@ -54,7 +54,7 @@ trait VueltaRoutes extends HttpService {
   import system.dispatcher
   implicit val defaultTimeout = Timeout(10000 milliseconds)
   val vueltaData = system.actorOf(Props[VueltaData], "vueltaData")
-  val routes = testRoute ~ nameForRider ~ updateRider
+  val routes = testRoute ~ nameForRider ~ updateRider ~ riderStatus ~ restStopCounts
 
   @Path("test")
   @ApiOperation(httpMethod = "GET", response = classOf[String], value = "Operates connectivity test")
@@ -98,8 +98,34 @@ trait VueltaRoutes extends HttpService {
           val update = ctx.request.entity.data.asString.parseJson.convertTo[RiderUpdate]
           val future = vueltaData ? update
           future onSuccess {
-            case RiderConfirm(rider, update) => ctx.complete(RiderConfirm(rider, update).toJson.toString)
+            case VueltaTables.RiderConfirm(rider, update) => ctx.complete(VueltaTables.RiderConfirm(rider, update).toJson.toString)
           }
+        }
+      }
+    }
+  }
+
+  @Path("riderStatus")
+  @ApiOperation(httpMethod = "GET", response = classOf[String], value = "Latest rider updates")
+  def riderStatus = get {
+    path("riderStatus") {
+      respondWithMediaType(`application/json`) { ctx =>
+        val future = vueltaData ? RiderUpdates
+        future onSuccess {
+          case x: String => ctx.complete(x)
+        }
+      }
+    }
+  }
+
+  @Path("restStopCounts")
+  @ApiOperation(httpMethod = "GET", response = classOf[String], value = "Counts of riders by rest stop")
+  def restStopCounts = get {
+    path("restStopCounts") {
+      respondWithMediaType(`application/json`) { ctx =>
+        val future = vueltaData ? RestStopCounts
+        future onSuccess {
+          case x: String => ctx.complete(x)
         }
       }
     }
