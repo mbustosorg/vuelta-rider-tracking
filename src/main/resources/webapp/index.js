@@ -13,7 +13,7 @@ $(document).ready(function() {
     function setLocation(position) {
         latitude = position.coords.latitude;
         longitude = position.coords.longitude;
-        $('#location').text('Lat: ' + latitude.toFixed(3) + ' Longitude: ' + longitude.toFixed(3))
+        $('#location').text('Lat: ' + latitude.toFixed(3) + ' Lon: ' + longitude.toFixed(3))
     };
 
     function getLocation() {
