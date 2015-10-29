@@ -8,7 +8,7 @@ import spray.http.StatusCodes._
 /**
  * Created by mb on 9/11/2015.
  */
-class RefServerTest extends Specification with Specs2RouteTest with HttpService {
+class VueltaServerTest extends Specification with Specs2RouteTest with HttpService {
 
   def actorRefFactory = system
   def context = actorRefFactory
