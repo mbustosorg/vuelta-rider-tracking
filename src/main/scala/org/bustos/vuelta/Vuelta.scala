@@ -43,6 +43,7 @@ object Vuelta extends App {
         println(fields)
         if (fields(3).forall(_.isDigit)) {
           riderTable += Rider(fields(3).toInt, fields(0), new DateTime(DateTimeZone.UTC))
+          val date = new DateTime(DateTimeZone.UTC)
           riderEventTable += RiderEvent(fields(3).toInt, RestStops(0).latitude, RestStops(0).longitude, new DateTime(DateTimeZone.UTC))
         }
       })
