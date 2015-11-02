@@ -16,6 +16,7 @@ object VueltaTables {
   case class RiderConfirm(rider: Rider, update: RiderEvent)
   case class Rider(bibNumber: Int, name: String, registrationDate: DateTime)
   case class RiderEvent(bibNumber: Int, latitude: Double, longitude: Double, timestamp: DateTime)
+  case class RiderSummary(bibNumber: Int, name: String, stop: String, timestamp: String)
 
   val RestStops = List(
     RestStop("Start", 37.850787, -122.258015),
@@ -50,11 +51,12 @@ object VueltaJsonProtocol extends DefaultJsonProtocol {
     }
   }
 
-  implicit val riderUpdate = jsonFormat3(RiderUpdate)
   implicit val restStop = jsonFormat3(RestStop)
+  implicit val riderUpdate = jsonFormat3(RiderUpdate)
   implicit val riderFormat = jsonFormat3(Rider)
   implicit val riderEventFormat = jsonFormat4(RiderEvent)
   implicit val riderConfirm = jsonFormat2(RiderConfirm)
+  implicit val riderSummary = jsonFormat4(RiderSummary)
 
 }
 

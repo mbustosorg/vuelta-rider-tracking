@@ -39,7 +39,8 @@ val projectLibraries = Seq(
     "org.slf4j"               %  "slf4j-simple"    % slf4jV,
     "mysql"                   %  "mysql-connector-java" % "latest.release",
     "joda-time"               %  "joda-time"       % "2.7",
-    "org.joda"                %  "joda-convert"    % "1.2"
+    "org.joda"                %  "joda-convert"    % "1.2",
+    "com.github.tototoshi"    %% "scala-csv"       % "1.2.2"
 )
 
 Revolver.settings

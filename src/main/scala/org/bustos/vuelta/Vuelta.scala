@@ -1,18 +1,22 @@
 package org.bustos.vuelta
 
+import java.io.File
+
 import akka.actor.{ActorSystem, Props}
 import akka.io.IO
 import akka.pattern.ask
 import akka.util.Timeout
+import org.joda.time.{DateTimeZone, DateTime}
 import spray.can.Http
 import com.typesafe.config.ConfigFactory
 import scala.util.Properties.envOrElse
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
+import com.github.tototoshi.csv._
 
 object Vuelta extends App {
 
-  def doMain() {
+  def doMain = {
 
     implicit val system = ActorSystem()
     implicit val timeout = Timeout(DurationInt(5).seconds)
@@ -26,5 +30,25 @@ object Vuelta extends App {
     else IO(Http) ? Http.Bind(server, "0.0.0.0", port.toInt)
   }
 
-  doMain()
+  def updateRiders = {
+    import VueltaTables._
+    import VueltaData._
+    import scala.slick.driver.MySQLDriver.simple._
+
+    db.withSession { implicit session =>
+      riderTable.filter(_.bibNumber > 0).delete
+      riderEventTable.filter(_.bibNumber > 0).delete
+      val reader = CSVReader.open(new File("/Users/mauricio/Downloads/vueltaRiders - riders.csv"))
+      reader.foreach(fields => {
+        println(fields)
+        if (fields(3).forall(_.isDigit)) {
+          riderTable += Rider(fields(3).toInt, fields(0), new DateTime(DateTimeZone.UTC))
+          riderEventTable += RiderEvent(fields(3).toInt, RestStops(0).latitude, RestStops(0).longitude, new DateTime(DateTimeZone.UTC))
+        }
+      })
+    }
+  }
+
+  updateRiders
+  doMain
 }

@@ -63,5 +63,6 @@ $(document).ready(function() {
             $('#submitResult').html('<strong>   Submitted </strong> for '+ results.rider.name)
         }
     };
+
     getLocation();
 });

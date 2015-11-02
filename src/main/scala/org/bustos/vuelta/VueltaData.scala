@@ -3,6 +3,7 @@ package org.bustos.vuelta
 import akka.actor.{Actor, ActorLogging}
 import akka.util.Timeout
 import org.bustos.vuelta.VueltaTables.{RiderEvent, Rider}
+import org.joda.time.format.DateTimeFormat
 import org.slf4j.LoggerFactory
 import scala.util.Properties.envOrElse
 import scala.slick.driver.MySQLDriver.simple._
@@ -12,7 +13,9 @@ import spray.json._
 
 object VueltaData {
 
-  val quarterMile = 1.0// / 60.0 / 4.0 // In degrees
+  val quarterMile = 1.0 / 60.0 / 8.0 // In degrees
+
+  val hhmmssFormatter = DateTimeFormat.forPattern("hh:mm:ss")
 
   val db = {
     //val mysqlURL = envOrElse("VUELTA_MYSQL_URL", "jdbc:mysql://localhost:3306/vuelta")
@@ -43,23 +46,24 @@ class VueltaData extends Actor with ActorLogging {
   }
   var riderEvents = Map.empty[Int, RiderEvent]
 
-  def riderCounts: List[(RestStop, Int)] = {
-    def restStop(event: RiderEvent): RestStop = {
-      RestStops.find({ x =>
-        (x.latitude - event.latitude).abs < quarterMile && (x.longitude - event.longitude) < quarterMile
-      }) match {
-        case Some(stop) => stop
-        case _ => OffCourse
-      }
+  def restStop(event: RiderEvent): RestStop = {
+    RestStops.find({ x =>
+      (x.latitude - event.latitude).abs < quarterMile && (x.longitude - event.longitude).abs < quarterMile
+    }) match {
+      case Some(stop) => stop
+      case _ => OffCourse
     }
+  }
+
+  def riderCounts: List[(String, Int)] = {
 
     val stopsForEvents = db.withSession { implicit session =>
       latestEventPerRider.list
     }.map(restStop(_)).groupBy(_.name)
 
     RestStops.map { x =>
-      if (stopsForEvents.contains(x.name)) (x, stopsForEvents(x.name).length)
-      else (x, 0)
+      if (stopsForEvents.contains(x.name)) (x.name, stopsForEvents(x.name).length)
+      else (x.name, 0)
     }
   }
 
@@ -92,7 +96,12 @@ class VueltaData extends Actor with ActorLogging {
       sender ! riderConfirm
     case RestStopCounts => sender ! riderCounts.toJson.toString
     case RiderUpdates => {
-      val updates: List[RiderEvent] = db.withSession { implicit session => latestEventPerRider.list }
+      val updates: List[RiderSummary] = db.withSession { implicit session =>
+        val events = latestEventPerRider.sortBy(_.timestamp).list
+        events.map({ x =>
+          RiderSummary(x.bibNumber, riders(x.bibNumber).name, restStop(x).name, hhmmssFormatter.print(x.timestamp))
+        })
+      }
       sender ! updates.toJson.toString
     }
   }
