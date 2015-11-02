@@ -49,6 +49,6 @@ object Vuelta extends App {
     }
   }
 
-  updateRiders
+  //updateRiders
   doMain
 }
