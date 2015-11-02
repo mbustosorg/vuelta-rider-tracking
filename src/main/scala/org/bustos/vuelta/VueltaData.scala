@@ -99,7 +99,7 @@ class VueltaData extends Actor with ActorLogging {
       val updates: List[RiderSummary] = db.withSession { implicit session =>
         val events = latestEventPerRider.sortBy(_.timestamp).list
         events.map({ x =>
-          RiderSummary(x.bibNumber, riders(x.bibNumber).name, restStop(x).name, hhmmssFormatter.print(x.timestamp))
+          RiderSummary(x.bibNumber, riders(x.bibNumber).name, restStop(x).name, hhmmssFormatter.print(x.timestamp.toDateTime(DateTimeZone.forID("America/Los_Angeles"))))
         })
       }
       sender ! updates.toJson.toString

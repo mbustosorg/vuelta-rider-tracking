@@ -16,8 +16,8 @@ $(document).ready(function() {
 				$('#riderstatus_table_body').append('<tr>' +
 					'<td>' + currentStatus.bibNumber + '</td>' +
 					'<td>' + currentStatus.name + '</td>' +
-					'<td>' + currentStatus.stop + '</td>' +
 					'<td>' + currentStatus.timestamp + '</td>' +
+					'<td>' + currentStatus.stop + '</td>' +
 					'</tr>'
 				);
 			});
