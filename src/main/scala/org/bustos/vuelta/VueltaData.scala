@@ -103,7 +103,7 @@ class VueltaData extends Actor with ActorLogging {
             if (restStop(x).name == "Off Course") {
               val lat = x.latitude
               val lon = x.longitude
-              f"$lat%1.4f" + " / " + f"$lon%1.4f"
+              f"$lat%1.4f" + ", " + f"$lon%1.4f"
             } else restStop(x).name
           }
           RiderSummary(x.bibNumber, riders(x.bibNumber).name, stop, hhmmssFormatter.print(x.timestamp.toDateTime(DateTimeZone.forID("America/Los_Angeles"))))

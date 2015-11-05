@@ -20,9 +20,9 @@ object VueltaTables {
 
   val RestStops = List(
     RestStop("Start", 37.850787, -122.258015),
-    RestStop("St Mary's", 37.838825, -122.126016),
-    RestStop("Bear Creek", 37.926135, -122.162578),
-    RestStop("Inspiration Point", 37.904802, -122.244842),
+    RestStop("Moraga", 37.838825, -122.126016),
+    RestStop("Briones", 37.925907, -122.162653),
+    RestStop("Tilden", 37.904802, -122.244842),
     RestStop("End", 37.850787, -122.258015)
   )
   val OffCourse = RestStop("Off Course", 0.0, 0.0)
