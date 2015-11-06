@@ -66,7 +66,8 @@ trait VueltaRoutes extends HttpService with UserAuthentication {
     riderStatus ~
     restStopCounts ~
     login ~
-    admin
+    admin ~
+    deleteRider
 
   val authenticationRejection = RejectionHandler {
     case AuthenticationRejection(message) :: _ => complete(400, message)
@@ -115,20 +116,56 @@ trait VueltaRoutes extends HttpService with UserAuthentication {
       }
     }
 
-  @Path("riderName/{bibNumber}")
+  @Path("rider/{bibNumber}")
   @ApiOperation(httpMethod = "GET", response = classOf[String], value = "Name for rider")
   @ApiImplicitParams(Array(
     new ApiImplicitParam(name = "bibNumber", required = true, dataType = "string", paramType = "path", value = "Rider's bib number")
   ))
   @ApiResponses(Array())
   def nameForRider = get {
-    pathPrefix("riderName" / IntNumber) { (bibNumber) =>
+    pathPrefix("rider" / IntNumber) { (bibNumber) =>
       pathEnd {
         respondWithMediaType(`application/json`) { ctx =>
           val future = vueltaData ? RiderRequest(bibNumber)
           future onSuccess {
             case Rider(number, name, datetime) => ctx.complete(Rider(number, name, datetime).toJson.toString)
           }
+        }
+      }
+    }
+  }
+
+  @Path("addRider")
+  @ApiOperation(httpMethod = "POST", response = classOf[String], value = "Add a new rider")
+  def login =
+    post {
+      path("rider" / IntNumber / "add") {
+        formFields('inputEmail, 'inputPassword) { (inputEmail, inputPassword) =>
+          handleRejections(authenticationRejection) {
+            authenticate(authenticateUser(inputEmail, inputPassword)) { authentication =>
+              setCookie(HttpCookie(SessionKey, content = authentication.token, expires = Some(expiration))) {
+                setCookie(HttpCookie(UserKey, content = inputEmail, expires = Some(expiration))) {
+                  complete("/admin")
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+  @Path("rider/{bibNumber}/delete")
+  @ApiOperation(httpMethod = "POST", response = classOf[String], value = "Delete rider")
+  @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "bibNumber", required = true, dataType = "string", paramType = "path", value = "Rider's bib number")
+  ))
+  @ApiResponses(Array())
+  def deleteRider = get {
+    pathPrefix("rider" / IntNumber / "delete") { (bibNumber) =>
+      respondWithMediaType(`application/json`) { ctx =>
+        val future = vueltaData ? RiderDelete(bibNumber)
+        future onSuccess {
+          case Rider(number, name, datetime) => ctx.complete(Rider(number, name, datetime).toJson.toString)
         }
       }
     }
@@ -146,7 +183,7 @@ trait VueltaRoutes extends HttpService with UserAuthentication {
           val update = ctx.request.entity.data.asString.parseJson.convertTo[RiderUpdate]
           val future = vueltaData ? update
           future onSuccess {
-            case VueltaTables.RiderConfirm(rider, update) => ctx.complete(VueltaTables.RiderConfirm(rider, update).toJson.toString)
+            case RiderConfirm(rider, update) => ctx.complete(RiderConfirm(rider, update).toJson.toString)
           }
         }
       }

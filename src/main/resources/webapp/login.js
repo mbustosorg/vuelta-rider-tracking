@@ -2,7 +2,6 @@ $(document).ready(function() {
   $("form#loginForm").submit(function() {
     var username = $('#inputEmail').val();
     var password = $('#inputPassword').val();
-    var redirect = '';
     $("#loggingIn").removeClass('hide');
     if (username && password) {
       var http = location.protocol;
@@ -22,8 +21,7 @@ $(document).ready(function() {
           if (data.error) {
           }
           else {
-			redirect = host.concat(data);
-            window.location.replace(data);
+            window.location.replace(host.concat(data));
           }
 	      $("#loggingIn").addClass('hide');
         }
@@ -31,4 +29,5 @@ $(document).ready(function() {
     }
     return false;
   });
+
 });

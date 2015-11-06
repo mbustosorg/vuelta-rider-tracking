@@ -11,6 +11,7 @@ object VueltaTables {
   case class RestStopCounts()
   case class RiderUpdates()
   case class RiderRequest(bibNumber: Int)
+  case class RiderDelete(bibNumber: Int)
   case class RiderUpdate(bibNumber: Int, latitude: Double, longitude: Double)
   case class RestStop(name: String, latitude: Double, longitude: Double)
   case class RiderConfirm(rider: Rider, update: RiderEvent)
