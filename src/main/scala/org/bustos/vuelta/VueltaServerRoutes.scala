@@ -10,7 +10,6 @@ import com.wordnik.swagger.annotations._
 import com.wordnik.swagger.model.ApiInfo
 import org.bustos.vuelta.VueltaData._
 import org.bustos.vuelta.VueltaTables.{Rider}
-import org.joda.time.{DateTimeZone, DateTime}
 import org.slf4j.LoggerFactory
 import spray.http.DateTime
 import spray.http.{DateTime, HttpCookie}
@@ -144,7 +143,7 @@ trait VueltaRoutes extends HttpService with UserAuthentication {
       path("rider" / IntNumber / "add") { (bibNumber) =>
         formFields('name) { (name) =>
           respondWithMediaType(`application/json`) { ctx =>
-            val future = vueltaData ? Rider(bibNumber, name, new DateTime(DateTimeZone.UTC))
+            val future = vueltaData ? Rider(bibNumber, name, new org.joda.time.DateTime(org.joda.time.DateTimeZone.UTC))
             future onSuccess {
               case Rider(number, name, datetime) => ctx.complete(Rider(number, name, datetime).toJson.toString)
             }

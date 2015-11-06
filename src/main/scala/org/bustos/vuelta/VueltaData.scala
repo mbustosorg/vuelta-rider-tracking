@@ -68,6 +68,27 @@ class VueltaData extends Actor with ActorLogging {
   }
 
   def receive = {
+    case Rider(bibNumber, name, addTime) => {
+      val rider = {
+        if (riders.contains(bibNumber)) riders(bibNumber)
+        else {
+          val riders = db.withSession { implicit session =>
+            riderTable.filter(_.bibNumber === bibNumber).list
+          }
+          if (riders.isEmpty) Rider(0, "", null)
+          else riders.head
+        }
+      }
+      if (rider.bibNumber != 0) sender ! Rider(0, "", null)
+      else {
+        val newRider = Rider(bibNumber, name, addTime)
+        db.withSession { implicit session =>
+          riderTable += newRider
+        }
+        riders += (bibNumber -> newRider)
+        sender ! newRider
+      }
+    }
     case RiderRequest(bibNumber) => {
       val rider = {
         if (riders.contains(bibNumber)) riders(bibNumber)
