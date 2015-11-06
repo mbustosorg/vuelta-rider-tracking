@@ -10,7 +10,9 @@ import com.wordnik.swagger.annotations._
 import com.wordnik.swagger.model.ApiInfo
 import org.bustos.vuelta.VueltaData._
 import org.bustos.vuelta.VueltaTables.{Rider}
+import org.joda.time.{DateTimeZone, DateTime}
 import org.slf4j.LoggerFactory
+import spray.http.DateTime
 import spray.http.{DateTime, HttpCookie}
 import spray.http.MediaTypes._
 import spray.json._
@@ -137,17 +139,14 @@ trait VueltaRoutes extends HttpService with UserAuthentication {
 
   @Path("addRider")
   @ApiOperation(httpMethod = "POST", response = classOf[String], value = "Add a new rider")
-  def login =
+  def addRider =
     post {
-      path("rider" / IntNumber / "add") {
-        formFields('inputEmail, 'inputPassword) { (inputEmail, inputPassword) =>
-          handleRejections(authenticationRejection) {
-            authenticate(authenticateUser(inputEmail, inputPassword)) { authentication =>
-              setCookie(HttpCookie(SessionKey, content = authentication.token, expires = Some(expiration))) {
-                setCookie(HttpCookie(UserKey, content = inputEmail, expires = Some(expiration))) {
-                  complete("/admin")
-                }
-              }
+      path("rider" / IntNumber / "add") { (bibNumber) =>
+        formFields('name) { (name) =>
+          respondWithMediaType(`application/json`) { ctx =>
+            val future = vueltaData ? Rider(bibNumber, name, new DateTime(DateTimeZone.UTC))
+            future onSuccess {
+              case Rider(number, name, datetime) => ctx.complete(Rider(number, name, datetime).toJson.toString)
             }
           }
         }
