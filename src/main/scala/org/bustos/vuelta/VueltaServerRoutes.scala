@@ -241,20 +241,21 @@ trait VueltaRoutes extends HttpService with UserAuthentication {
 
   @Path("admin")
   @ApiOperation(httpMethod = "GET", response = classOf[String], value = "Admin into the system")
-  def admin =
-    cookie("VUELTA_SESSION") { sessionId => {
-      cookie("VUELTA_USER") { username => {
-        path("admin" | "admin.html") {
+  def admin = get {
+    path("admin.html") {
+      cookie("VUELTA_SESSION") { sessionId => {
+        cookie("VUELTA_USER") { username => {
           handleRejections(authorizationRejection) {
             authenticate(authenticateSessionId(sessionId.content, username.content)) { authentication =>
               getFromResource("webapp/admin.html")
             }
           }
         }
+        }
       }
-      }
+      } ~ getFromResource("webapp/login.html")
     }
-    }
+  }
 
   @Path("login")
   @ApiOperation(httpMethod = "GET", response = classOf[String], value = "Log into the system")
@@ -266,7 +267,7 @@ trait VueltaRoutes extends HttpService with UserAuthentication {
             authenticate(authenticateUser(inputEmail, inputPassword)) { authentication =>
               setCookie(HttpCookie(SessionKey, content = authentication.token, expires = Some(expiration))) {
                 setCookie(HttpCookie(UserKey, content = inputEmail, expires = Some(expiration))) {
-                  complete("/admin")
+                  complete("/admin.html")
                 }
               }
             }
