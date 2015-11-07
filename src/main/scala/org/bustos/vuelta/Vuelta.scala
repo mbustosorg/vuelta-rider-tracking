@@ -41,10 +41,10 @@ object Vuelta extends App {
       val reader = CSVReader.open(new File("/Users/mauricio/Downloads/vueltaRiders - riders.csv"))
       reader.foreach(fields => {
         println(fields)
-        if (fields(3).forall(_.isDigit)) {
-          riderTable += Rider(fields(3).toInt, fields(0), new DateTime(DateTimeZone.UTC))
+        if (fields(1) != "" && fields(1).forall(_.isDigit)) {
+          riderTable += Rider(fields(1).toInt, fields(0), new DateTime(DateTimeZone.UTC))
           val date = new DateTime(DateTimeZone.UTC)
-          riderEventTable += RiderEvent(fields(3).toInt, RestStops(0).latitude, RestStops(0).longitude, new DateTime(DateTimeZone.UTC))
+          riderEventTable += RiderEvent(fields(1).toInt, RestStops(0).latitude, RestStops(0).longitude, new DateTime(DateTimeZone.UTC))
         }
       })
     }
