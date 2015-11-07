@@ -63,12 +63,14 @@ trait VueltaRoutes extends HttpService with UserAuthentication {
   val vueltaData = system.actorOf(Props[VueltaData], "vueltaData")
   val routes = testRoute ~
     nameForRider ~
+    deleteRider ~
+    addRider ~
     updateRider ~
+    observeRider ~
     riderStatus ~
     restStopCounts ~
     login ~
-    admin ~
-    deleteRider
+    admin
 
   val authenticationRejection = RejectionHandler {
     case AuthenticationRejection(message) :: _ => complete(400, message)
@@ -136,11 +138,11 @@ trait VueltaRoutes extends HttpService with UserAuthentication {
     }
   }
 
-  @Path("addRider")
+  @Path("rider/{bibNumber}")
   @ApiOperation(httpMethod = "POST", response = classOf[String], value = "Add a new rider")
   def addRider =
     post {
-      path("rider" / IntNumber / "add") { (bibNumber) =>
+      path("rider" / IntNumber) { (bibNumber) =>
         formFields('name) { (name) =>
           respondWithMediaType(`application/json`) { ctx =>
             val future = vueltaData ? Rider(bibNumber, name, new org.joda.time.DateTime(org.joda.time.DateTimeZone.UTC))
@@ -158,7 +160,7 @@ trait VueltaRoutes extends HttpService with UserAuthentication {
     new ApiImplicitParam(name = "bibNumber", required = true, dataType = "string", paramType = "path", value = "Rider's bib number")
   ))
   @ApiResponses(Array())
-  def deleteRider = get {
+  def deleteRider = post {
     pathPrefix("rider" / IntNumber / "delete") { (bibNumber) =>
       respondWithMediaType(`application/json`) { ctx =>
         val future = vueltaData ? RiderDelete(bibNumber)
@@ -169,13 +171,29 @@ trait VueltaRoutes extends HttpService with UserAuthentication {
     }
   }
 
-  @Path("updateRider/{bibNumber}")
+  @Path("rider/{bibNumber}/update")
+  @ApiOperation(httpMethod = "POST", response = classOf[String], value = "Update a rider's bibNumber")
+  def updateRider =
+    post {
+      path("rider" / IntNumber / "update") { (bibNumber) =>
+        formFields('name) { (name) =>
+          respondWithMediaType(`application/json`) { ctx =>
+            val future = vueltaData ? RiderUpdateBib(bibNumber, name)
+            future onSuccess {
+              case Rider(number, name, datetime) => ctx.complete(Rider(number, name, datetime).toJson.toString)
+            }
+          }
+        }
+      }
+    }
+
+  @Path("rider/{bibNumber}/observe")
   @ApiOperation(httpMethod = "POST", response = classOf[String], value = "Update position of rider")
   @ApiImplicitParams(Array(
     new ApiImplicitParam(name = "bibNumber", required = true, dataType = "string", paramType = "path", value = "Rider's bib number")
   ))
-  def updateRider = post {
-    pathPrefix("updateRider" / IntNumber) { (bibNumber) =>
+  def observeRider = post {
+    pathPrefix("rider" / IntNumber / "observe") { (bibNumber) =>
       pathEnd {
         respondWithMediaType(`application/json`) { ctx =>
           val update = ctx.request.entity.data.asString.parseJson.convertTo[RiderUpdate]

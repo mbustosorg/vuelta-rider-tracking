@@ -41,7 +41,7 @@ $(document).ready(function() {
             var dataString = "{\"bibNumber\": " + bibNumber + ", \"latitude\":" + latitude.toString() + ", \"longitude\": " + longitude.toString() + "}";
             $.ajax({
                 type: "POST",
-                url: '/updateRider/' + bibNumber,
+                url: '/rider/' + bibNumber + "/update",
                 dataType: "json",
                 data: dataString,
                 cache: false

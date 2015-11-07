@@ -12,7 +12,10 @@ $(document).ready(function() {
         type: "POST",
         url: "/rider/" + bibNumber,
         contentType: "application/x-www-form-urlencoded; charset=utf-8",
-        data: "name=" + name,
+        data: encodeURI("name=" + name),
+        error: function(XMLHttpRequest, textStatus, errorThrown) {
+          $('#authenticationAlert').text(XMLHttpRequest.responseText);
+        },
         success: function(data){
            if (data.bibNumber == 0) {
               $('#authenticationAlert').addClass('alert-danger');
@@ -25,9 +28,36 @@ $(document).ready(function() {
            }
         }
       });
-  };
+    }
+    return false;
+  }
 
   function handleUpdateRider() {
+    var bibNumber = $('#inputBibNumber').val();
+    var name = $('#inputName').val();
+    if (bibNumber && name) {
+      $.ajax({
+        type: "POST",
+        url: "/rider/" + bibNumber + "/update",
+        contentType: "application/x-www-form-urlencoded; charset=utf-8",
+        data: encodeURI("name=" + name),
+        error: function(XMLHttpRequest, textStatus, errorThrown) {
+          $('#authenticationAlert').text(XMLHttpRequest.responseText);
+        },
+        success: function(data){
+           if (data.bibNumber == 0) {
+              $('#authenticationAlert').addClass('alert-danger');
+              $('#authenticationAlert').removeClass('alert-success');
+              $('#authenticationAlert').html('<strong>   Error: </strong> Could not update rider');
+           } else {
+              $('#authenticationAlert').addClass('alert-success');
+              $('#authenticationAlert').removeClass('alert-danger');
+              $('#authenticationAlert').html('<strong>   Success: </strong> Rider updated');
+           }
+        }
+      });
+    }
+    return false;
   };
 
   function handleDeleteRider() {
@@ -42,9 +72,10 @@ $(document).ready(function() {
         url: "/rider/" + bibNumber + "/delete",
         error: function(XMLHttpRequest, textStatus, errorThrown) {
           $('#authenticationAlert').text(XMLHttpRequest.responseText);
-          $('#authenticationAlert').removeClass('hide');
         },
         success: function(data){
+           $('#inputName').val('');
+           $('#inputBibNumber').val('');
            $('#authenticationAlert').addClass('alert-success');
            $('#authenticationAlert').removeClass('alert-danger');
            $('#authenticationAlert').html('<strong>   Success: </strong> Bib number deleted');
@@ -68,7 +99,6 @@ $(document).ready(function() {
           $('#authenticationAlert').addClass('alert-danger');
           $('#authenticationAlert').removeClass('alert-success');
           $('#authenticationAlert').text(XMLHttpRequest.responseText);
-          $('#authenticationAlert').removeClass('hide');
         },
         success: function(data){
            if (data.bibNumber == 0) {

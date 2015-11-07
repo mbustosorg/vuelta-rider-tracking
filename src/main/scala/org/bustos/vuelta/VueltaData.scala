@@ -44,6 +44,12 @@ class VueltaData extends Actor with ActorLogging {
     }
     fullList.toMap
   }
+  var ridersByName: Map[String, Rider] = {
+    val fullList = db.withSession { implicit session =>
+      riderTable.list.map({ x => (x.name -> Rider(x.bibNumber, x.name, x.registrationDate))})
+    }
+    fullList.toMap
+  }
   var riderEvents = Map.empty[Int, RiderEvent]
 
   def restStop(event: RiderEvent): RestStop = {
@@ -86,6 +92,7 @@ class VueltaData extends Actor with ActorLogging {
           riderTable += newRider
         }
         riders += (bibNumber -> newRider)
+        ridersByName += (name -> newRider)
         sender ! newRider
       }
     }
@@ -118,8 +125,33 @@ class VueltaData extends Actor with ActorLogging {
           riderTable.filter(_.bibNumber === bibNumber).delete
         }
         riders -= bibNumber
+        ridersByName -= rider.name
       }
       sender ! rider
+    }
+    case RiderUpdateBib(bibNumber, name) => {
+      val rider = {
+        if (ridersByName.contains(name)) ridersByName(name)
+        else {
+          val riders = db.withSession { implicit session =>
+            riderTable.filter(_.name === name).list
+          }
+          if (riders.isEmpty) Rider(0, "", null)
+          else riders.head
+        }
+      }
+      if (rider.bibNumber > 0) {
+        val updatedRider = Rider(bibNumber, name, new org.joda.time.DateTime(org.joda.time.DateTimeZone.UTC))
+        db.withSession { implicit session =>
+          riderTable.filter(_.bibNumber === rider.bibNumber).delete
+          riderTable += updatedRider
+        }
+        riders -= bibNumber
+        ridersByName -= name
+        riders += (bibNumber -> updatedRider)
+        ridersByName += (name -> updatedRider)
+        sender ! updatedRider
+      } else sender ! rider
     }
     case RiderUpdate(bibNumber, latitude, longitude) =>
       val riderConfirm = {
