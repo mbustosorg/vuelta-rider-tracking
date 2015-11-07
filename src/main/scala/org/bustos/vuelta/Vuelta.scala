@@ -44,12 +44,13 @@ object Vuelta extends App {
         if (fields(1) != "" && fields(1).forall(_.isDigit)) {
           riderTable += Rider(fields(1).toInt, fields(0), new DateTime(DateTimeZone.UTC))
           val date = new DateTime(DateTimeZone.UTC)
-          riderEventTable += RiderEvent(fields(1).toInt, RestStops(0).latitude, RestStops(0).longitude, new DateTime(DateTimeZone.UTC))
+          val localdate = new DateTime
+          riderEventTable += RiderEvent(fields(1).toInt, RestStops(0).latitude, RestStops(0).longitude, date)
         }
       })
     }
   }
 
-  //updateRiders
+  updateRiders
   doMain
 }

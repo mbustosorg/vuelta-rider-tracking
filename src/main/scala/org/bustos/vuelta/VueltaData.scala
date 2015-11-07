@@ -15,7 +15,7 @@ object VueltaData {
 
   val quarterMile = 1.0 / 60.0 / 8.0 // In degrees
 
-  val hhmmssFormatter = DateTimeFormat.forPattern("hh:mm:ss")
+  val hhmmssFormatter = DateTimeFormat.forPattern("hh:mm:ss a")
 
   val db = {
     //val mysqlURL = envOrElse("VUELTA_MYSQL_URL", "jdbc:mysql://localhost:3306/vuelta")
@@ -178,7 +178,7 @@ class VueltaData extends Actor with ActorLogging {
             if (restStop(x).name == "Off Course") {
               val lat = x.latitude
               val lon = x.longitude
-              f"$lat%1.4f" + ", " + f"$lon%1.4f"
+              "<a href=http://maps.google.com/maps?z=12&t=m&q=loc:" + f"$lat%1.4f" + "+" + f"$lon%1.4f>" + f"$lat%1.4f" + ", " + f"$lon%1.4f" +"</a>"
             } else restStop(x).name
           }
           if (riders.contains(x.bibNumber)) RiderSummary(x.bibNumber, riders(x.bibNumber).name, stop, hhmmssFormatter.print(x.timestamp.toDateTime(DateTimeZone.forID("America/Los_Angeles"))))
