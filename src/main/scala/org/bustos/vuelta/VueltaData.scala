@@ -123,6 +123,7 @@ class VueltaData extends Actor with ActorLogging {
       if (rider.bibNumber > 0) {
         db.withSession { implicit session =>
           riderTable.filter(_.bibNumber === bibNumber).delete
+          riderEventTable.filter(_.bibNumber === rider.bibNumber).delete
         }
         riders -= bibNumber
         ridersByName -= rider.name
@@ -144,6 +145,7 @@ class VueltaData extends Actor with ActorLogging {
         val updatedRider = Rider(bibNumber, name, new org.joda.time.DateTime(org.joda.time.DateTimeZone.UTC))
         db.withSession { implicit session =>
           riderTable.filter(_.bibNumber === rider.bibNumber).delete
+          riderEventTable.filter(_.bibNumber === rider.bibNumber).delete
           riderTable += updatedRider
         }
         riders -= bibNumber
@@ -178,8 +180,9 @@ class VueltaData extends Actor with ActorLogging {
               f"$lat%1.4f" + ", " + f"$lon%1.4f"
             } else restStop(x).name
           }
-          RiderSummary(x.bibNumber, riders(x.bibNumber).name, stop, hhmmssFormatter.print(x.timestamp.toDateTime(DateTimeZone.forID("America/Los_Angeles"))))
-        })
+          if (riders.contains(x.bibNumber)) RiderSummary(x.bibNumber, riders(x.bibNumber).name, stop, hhmmssFormatter.print(x.timestamp.toDateTime(DateTimeZone.forID("America/Los_Angeles"))))
+          else RiderSummary(0, "", "", "")
+        }).filter({ _.bibNumber > 0 })
       }
       sender ! updates.toJson.toString
     }
