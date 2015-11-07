@@ -70,6 +70,7 @@ trait VueltaRoutes extends HttpService with UserAuthentication {
     riderStatus ~
     restStopCounts ~
     login ~
+    reports ~
     admin
 
   val authenticationRejection = RejectionHandler {

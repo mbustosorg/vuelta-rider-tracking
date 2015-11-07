@@ -90,6 +90,7 @@ class VueltaData extends Actor with ActorLogging {
         val newRider = Rider(bibNumber, name, addTime)
         db.withSession { implicit session =>
           riderTable += newRider
+          riderEventTable += RiderEvent(bibNumber, RestStopsByName("Start").latitude, RestStopsByName("Start").longitude, new DateTime(DateTimeZone.UTC))
         }
         riders += (bibNumber -> newRider)
         ridersByName += (name -> newRider)

@@ -27,6 +27,9 @@ object VueltaTables {
     RestStop("Tilden", 37.904802, -122.244842),
     RestStop("End", 37.850787, -122.258015)
   )
+
+  val RestStopsByName = RestStops.map({ x => (x.name, x)}).toMap
+
   val OffCourse = RestStop("Off Course", 0.0, 0.0)
 
   val riderTable = TableQuery[RiderTable]
