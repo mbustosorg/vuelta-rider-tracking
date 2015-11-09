@@ -37,7 +37,7 @@ object VueltaTables {
   case class RiderConfirm(rider: Rider, update: RiderEvent)
   case class Rider(bibNumber: Int, name: String, registrationDate: DateTime)
   case class RiderEvent(bibNumber: Int, latitude: Double, longitude: Double, timestamp: DateTime)
-  case class RiderSummary(bibNumber: Int, name: String, stop: String, timestamp: String)
+  case class RiderSummary(bibNumber: Int, name: String, stop: String, timestamp: String, timestampObject: DateTime)
 
   val RestStops = List(
     RestStop("Start", 37.850787, -122.258015),
@@ -46,6 +46,8 @@ object VueltaTables {
     RestStop("Tilden", 37.904802, -122.244842),
     RestStop("End", 37.850787, -122.258015)
   )
+  val RideOnRestStops = RestStops.slice(1, RestStops.length)
+  val StartRestStop = RestStops(0)
 
   val RestStopsByName = RestStops.map({ x => (x.name, x)}).toMap
 
@@ -80,7 +82,7 @@ object VueltaJsonProtocol extends DefaultJsonProtocol {
   implicit val riderFormat = jsonFormat3(Rider)
   implicit val riderEventFormat = jsonFormat4(RiderEvent)
   implicit val riderConfirm = jsonFormat2(RiderConfirm)
-  implicit val riderSummary = jsonFormat4(RiderSummary)
+  implicit val riderSummary = jsonFormat5(RiderSummary)
 
 }
 

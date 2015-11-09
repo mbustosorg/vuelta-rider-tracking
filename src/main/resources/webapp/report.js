@@ -45,14 +45,11 @@ $(document).ready(function() {
     };
 
     function chartData(results) {
-      var data = google.visualization.arrayToDataTable([
-        ['Stop', 'Count'],
-        [results[0][0], results[0][1]],
-        [results[1][0], results[1][1]],
-        [results[2][0], results[2][1]],
-        [results[3][0], results[3][1]],
-        [results[4][0], results[4][1]]
-      ]);
+      var dataResults = [['Stop', 'Count']];
+      for (i = 0; i < results.length; i++) {
+         dataResults[i + 1] = [results[i][0], results[i][1]];
+      }
+      var data = google.visualization.arrayToDataTable(dataResults);
 
       var options = {
         title: 'Rider count by last rest stop',

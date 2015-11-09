@@ -32,7 +32,7 @@ import spray.json._
 
 object VueltaData {
 
-  val quarterMile = 1.0 / 60.0 / 8.0 // In degrees
+  val quarterMile = 1.0 / 60.0 / 4.0 // In degrees
 
   val hhmmssFormatter = DateTimeFormat.forPattern("hh:mm:ss a")
 
@@ -71,24 +71,48 @@ class VueltaData extends Actor with ActorLogging {
   }
   var riderEvents = Map.empty[Int, RiderEvent]
 
-  def restStop(event: RiderEvent): RestStop = {
-    RestStops.find({ x =>
-      (x.latitude - event.latitude).abs < quarterMile && (x.longitude - event.longitude).abs < quarterMile
-    }) match {
+  def atStop(event: RiderEvent, stop: RestStop): Boolean = {
+    (stop.latitude - event.latitude).abs < quarterMile && (stop.longitude - event.longitude).abs < quarterMile
+  }
+
+  def restStop(event: RiderEvent, stops: List[RestStop]): RestStop = {
+    stops.find({ atStop(event, _) }) match {
       case Some(stop) => stop
       case _ => OffCourse
     }
   }
 
   def riderCounts: List[(String, Int)] = {
+    val stopCounts = lastRiderEventSummary.groupBy(_.stop).map({ case (x, y) => (x, y.length) })
+    RestStops.map({ x => if (stopCounts.contains(x.name)) (x.name, stopCounts(x.name)) else (x.name, 0)})
+  }
 
-    val stopsForEvents = db.withSession { implicit session =>
-      latestEventPerRider.list
-    }.map(restStop(_)).groupBy(_.name)
-
-    RestStops.map { x =>
-      if (stopsForEvents.contains(x.name)) (x.name, stopsForEvents(x.name).length)
-      else (x.name, 0)
+  def lastRiderEventSummary = {
+    db.withSession { implicit session =>
+      val events: Map[Int, List[RiderEvent]] = riderEventTable.sortBy(p => (p.bibNumber.asc, p.timestamp.desc)).list.groupBy(_.bibNumber)
+      //val events = latestEventPerRider.sortBy(_.timestamp).list
+      events.map({ case (bibNumber, curEvents) =>
+        val stop = {
+          if (restStop(curEvents.head, RestStops).name == "Off Course") {
+            val lat = curEvents.head.latitude
+            val lon = curEvents.head.longitude
+            "<a href=http://maps.google.com/maps?z=12&t=m&q=loc:" + f"$lat%1.4f" + "+" + f"$lon%1.4f>" + f"$lat%1.4f" + ", " + f"$lon%1.4f" +"</a>"
+          } else {
+            curEvents.find({ !atStop(_, StartRestStop) }) match {
+              case Some(x) => restStop(curEvents.head, RideOnRestStops).name
+              case None => restStop(curEvents.head, RestStops).name
+            }
+          }
+        }
+        if (riders.contains(curEvents.head.bibNumber))
+          RiderSummary(curEvents.head.bibNumber,
+            riders(curEvents.head.bibNumber).name,
+            stop,
+            hhmmssFormatter.print(curEvents.head.timestamp.toDateTime(DateTimeZone.forID("America/Los_Angeles"))),
+            curEvents.head.timestamp
+          )
+        else RiderSummary(0, "", "", "", null)
+      }).filter({ _.bibNumber > 0 }).toList.sortWith({ (x, y) => x.timestampObject.isBefore(y.timestampObject) })
     }
   }
 
@@ -190,21 +214,7 @@ class VueltaData extends Actor with ActorLogging {
       sender ! riderConfirm
     case RestStopCounts => sender ! riderCounts.toJson.toString
     case RiderUpdates => {
-      val updates: List[RiderSummary] = db.withSession { implicit session =>
-        val events = latestEventPerRider.sortBy(_.timestamp).list
-        events.map({ x =>
-          val stop = {
-            if (restStop(x).name == "Off Course") {
-              val lat = x.latitude
-              val lon = x.longitude
-              "<a href=http://maps.google.com/maps?z=12&t=m&q=loc:" + f"$lat%1.4f" + "+" + f"$lon%1.4f>" + f"$lat%1.4f" + ", " + f"$lon%1.4f" +"</a>"
-            } else restStop(x).name
-          }
-          if (riders.contains(x.bibNumber)) RiderSummary(x.bibNumber, riders(x.bibNumber).name, stop, hhmmssFormatter.print(x.timestamp.toDateTime(DateTimeZone.forID("America/Los_Angeles"))))
-          else RiderSummary(0, "", "", "")
-        }).filter({ _.bibNumber > 0 })
-      }
-      sender ! updates.toJson.toString
+      sender ! lastRiderEventSummary.toJson.toString
     }
   }
 }
