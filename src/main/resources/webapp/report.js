@@ -18,6 +18,30 @@
 */
 
 $(document).ready(function() {
+
+    function updateRiderEvents(e) {
+        var bibNumber = e.currentTarget.id.replace('button', '');
+        if (!$('#events' + bibNumber).hasClass('expanded')) {
+            $.ajax({
+                type: "GET",
+                url: '/rider/' + bibNumber + '/events',
+                cache: false
+            }).done (function (riderEvents) {
+                for (i = 0; i < riderEvents.length - 1; i++) {
+                    $('#events' + bibNumber).after(
+                        '<tr>' +
+                        '<td></td>' +
+                        '<td></td>' +
+                        '<td></td>' +
+                        '<td>' + riderEvents[i].timestamp + '</td>' +
+                        '<td>' + riderEvents[i].stop + '</td>' +
+                        '</tr>'
+                    );
+                }
+            });
+		}
+    };
+
     function handleReportSelect() {
         $.ajax({
             type: "GET",
@@ -32,16 +56,21 @@ $(document).ready(function() {
 		}).done (function (riderStatus) {
 			$('tbody#riderstatus_table_body').empty();
 			$.each(riderStatus, function(key, currentStatus) {
-				$('#riderstatus_table_body').append('<tr>' +
+				$('#riderstatus_table_body').append(
+                    '<tr id="events' + currentStatus.bibNumber + '">' +
+                    '<td><button class=\'btn btn-default btn-xs\' id=\'button' + currentStatus.bibNumber + '\'>' +
+                    '<span class=\'glyphicon glyphicon-plus-sign\'></span></button>' +
+                    '</td>' +
 					'<td>' + currentStatus.bibNumber + '</td>' +
 					'<td>' + currentStatus.name + '</td>' +
 					'<td>' + currentStatus.timestamp + '</td>' +
 					'<td>' + currentStatus.stop + '</td>' +
 					'</tr>'
 				);
+				$('#button' + currentStatus.bibNumber).on('click', function (e) { updateRiderEvents(e) });
 			});
 		});
-        setTimeout(handleReportSelect,10000);
+        setTimeout(handleReportSelect, 30000);
     };
 
     function chartData(results) {

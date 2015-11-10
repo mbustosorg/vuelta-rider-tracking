@@ -24,6 +24,7 @@ import javax.ws.rs.Path
 import akka.actor._
 import akka.pattern.ask
 import akka.util.Timeout
+import scala.concurrent.Future
 import com.gettyimages.spray.swagger.SwaggerHttpService
 import com.wordnik.swagger.annotations._
 import com.wordnik.swagger.model.ApiInfo
@@ -63,7 +64,7 @@ class VueltaServiceActor extends HttpServiceActor with ActorLogging {
     override def baseUrl = "/"
     override def docsPath = "api-docs"
     override def actorRefFactory = context
-    override def apiInfo = Some(new ApiInfo("Vuelta API",
+    override def apiInfo = Some(new ApiInfo("Vuelta Rider Tracking API",
       "API for interacting with the Vuelta Server.", "", "", "", ""))
   }
 }
@@ -86,6 +87,7 @@ trait VueltaRoutes extends HttpService with UserAuthentication {
     addRider ~
     updateRider ~
     observeRider ~
+    riderEvents ~
     riderStatus ~
     restStopCounts ~
     login ~
@@ -222,13 +224,27 @@ trait VueltaRoutes extends HttpService with UserAuthentication {
   ))
   def observeRider = post {
     pathPrefix("rider" / IntNumber / "observe") { (bibNumber) =>
-      pathEnd {
-        respondWithMediaType(`application/json`) { ctx =>
-          val update = ctx.request.entity.data.asString.parseJson.convertTo[RiderUpdate]
-          val future = vueltaData ? update
-          future onSuccess {
-            case RiderConfirm(rider, update) => ctx.complete(RiderConfirm(rider, update).toJson.toString)
-          }
+      respondWithMediaType(`application/json`) { ctx =>
+        val update = ctx.request.entity.data.asString.parseJson.convertTo[RiderUpdate]
+        val future = vueltaData ? update
+        future onSuccess {
+          case RiderConfirm(rider, update) => ctx.complete(RiderConfirm(rider, update).toJson.toString)
+        }
+      }
+    }
+  }
+
+  @Path("rider/{bibNumber}/events")
+  @ApiOperation(httpMethod = "GET", response = classOf[String], value = "History of rider events")
+  @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "bibNumber", required = true, dataType = "integer", paramType = "path", value = "Rider's bib number")
+  ))
+  def riderEvents = get {
+    pathPrefix("rider" / IntNumber / "events") { (bibNumber) =>
+      respondWithMediaType(`application/json`) { ctx =>
+        val future = vueltaData ? RiderEventsRequest(bibNumber)
+        future onSuccess {
+          case RiderEventList(list) => ctx.complete(list.toJson.toString)
         }
       }
     }

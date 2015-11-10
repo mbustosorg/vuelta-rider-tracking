@@ -30,6 +30,7 @@ object VueltaTables {
   case class RestStopCounts()
   case class RiderUpdates()
   case class RiderRequest(bibNumber: Int)
+  case class RiderEventsRequest(bibNumber: Int)
   case class RiderDelete(bibNumber: Int)
   case class RiderUpdateBib(bibNumber: Int, name: String)
   case class RiderUpdate(bibNumber: Int, latitude: Double, longitude: Double)
@@ -38,6 +39,7 @@ object VueltaTables {
   case class Rider(bibNumber: Int, name: String, registrationDate: DateTime)
   case class RiderEvent(bibNumber: Int, latitude: Double, longitude: Double, timestamp: DateTime)
   case class RiderSummary(bibNumber: Int, name: String, stop: String, timestamp: String, timestampObject: DateTime)
+  case class RiderEventList(list: List[RiderSummary])
 
   val RestStops = List(
     RestStop("Start", 37.850787, -122.258015),
