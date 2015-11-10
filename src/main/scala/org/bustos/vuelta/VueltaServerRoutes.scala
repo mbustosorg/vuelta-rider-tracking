@@ -142,7 +142,7 @@ trait VueltaRoutes extends HttpService with UserAuthentication {
   @Path("rider/{bibNumber}")
   @ApiOperation(httpMethod = "GET", response = classOf[String], value = "Name for rider")
   @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "bibNumber", required = true, dataType = "string", paramType = "path", value = "Rider's bib number")
+    new ApiImplicitParam(name = "bibNumber", required = true, dataType = "integer", paramType = "path", value = "Rider's bib number")
   ))
   @ApiResponses(Array())
   def nameForRider = get {
@@ -160,6 +160,10 @@ trait VueltaRoutes extends HttpService with UserAuthentication {
 
   @Path("rider/{bibNumber}")
   @ApiOperation(httpMethod = "POST", response = classOf[String], value = "Add a new rider")
+  @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "bibNumber", required = true, dataType = "integer", paramType = "path", value = "Rider's bib number"),
+    new ApiImplicitParam(name = "name", required = true, dataType = "string", paramType = "form", value = "Rider's name")
+  ))
   def addRider =
     post {
       path("rider" / IntNumber) { (bibNumber) =>
@@ -177,7 +181,7 @@ trait VueltaRoutes extends HttpService with UserAuthentication {
   @Path("rider/{bibNumber}/delete")
   @ApiOperation(httpMethod = "POST", response = classOf[String], value = "Delete rider")
   @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "bibNumber", required = true, dataType = "string", paramType = "path", value = "Rider's bib number")
+    new ApiImplicitParam(name = "bibNumber", required = true, dataType = "integer", paramType = "path", value = "Rider's bib number")
   ))
   @ApiResponses(Array())
   def deleteRider = post {
@@ -193,6 +197,10 @@ trait VueltaRoutes extends HttpService with UserAuthentication {
 
   @Path("rider/{bibNumber}/update")
   @ApiOperation(httpMethod = "POST", response = classOf[String], value = "Update a rider's bibNumber")
+  @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "bibNumber", required = true, dataType = "integer", paramType = "path", value = "Rider's bib number"),
+    new ApiImplicitParam(name = "name", required = true, dataType = "string", paramType = "form", value = "Rider's name")
+  ))
   def updateRider =
     post {
       path("rider" / IntNumber / "update") { (bibNumber) =>
@@ -210,7 +218,7 @@ trait VueltaRoutes extends HttpService with UserAuthentication {
   @Path("rider/{bibNumber}/observe")
   @ApiOperation(httpMethod = "POST", response = classOf[String], value = "Update position of rider")
   @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "bibNumber", required = true, dataType = "string", paramType = "path", value = "Rider's bib number")
+    new ApiImplicitParam(name = "bibNumber", required = true, dataType = "integer", paramType = "path", value = "Rider's bib number")
   ))
   def observeRider = post {
     pathPrefix("rider" / IntNumber / "observe") { (bibNumber) =>
@@ -252,15 +260,11 @@ trait VueltaRoutes extends HttpService with UserAuthentication {
     }
   }
 
-  @Path("report")
-  @ApiOperation(httpMethod = "GET", response = classOf[String], value = "Get the rider reports")
   def reports =
     path("report") {
       getFromResource("webapp/report.html")
     }
 
-  @Path("admin")
-  @ApiOperation(httpMethod = "GET", response = classOf[String], value = "Admin into the system")
   def admin = get {
     path("admin.html") {
       cookie("VUELTA_SESSION") { sessionId => {
@@ -277,8 +281,6 @@ trait VueltaRoutes extends HttpService with UserAuthentication {
     }
   }
 
-  @Path("login")
-  @ApiOperation(httpMethod = "GET", response = classOf[String], value = "Log into the system")
   def login =
     post {
       path("login") {
