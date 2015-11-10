@@ -22,6 +22,7 @@ $(document).ready(function() {
     function updateRiderEvents(e) {
         var bibNumber = e.currentTarget.id.replace('button', '');
         if (!$('#events' + bibNumber).hasClass('expanded')) {
+            $('#events' + bibNumber).addClass('expanded');
             $.ajax({
                 type: "GET",
                 url: '/rider/' + bibNumber + '/events',
@@ -70,7 +71,7 @@ $(document).ready(function() {
 				$('#button' + currentStatus.bibNumber).on('click', function (e) { updateRiderEvents(e) });
 			});
 		});
-        setTimeout(handleReportSelect, 30000);
+        setTimeout(handleReportSelect, 60000);
     };
 
     function chartData(results) {
