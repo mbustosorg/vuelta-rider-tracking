@@ -89,16 +89,8 @@ class VueltaData extends Actor with ActorLogging {
       "<a href=http://maps.google.com/maps?z=12&t=m&q=loc:" + f"$lat%1.4f" + "+" + f"$lon%1.4f>" + f"$lat%1.4f" + ", " + f"$lon%1.4f" +"</a>"
     } else {
       val sorted = context.sortWith({ (x, y) => x.timestamp.getMillis < y.timestamp.getMillis })
-      if (!sorted.isEmpty && sorted.head.timestamp == event.timestamp) {
-        restStop(event, RestStops).name
-      } else {
-        context.find({
-          !atStop(_, StartRestStop)
-        }) match {
-          case Some(x) => restStop(event, RideOnRestStops).name
-          case None => restStop(event, RestStops).name
-        }
-      }
+      if (event.timestamp.getHourOfDay < RaceStartHour + 2.0) restStop(event, RestStops).name
+      else restStop(event, RideOnRestStops).name
     }
   }
 
@@ -223,7 +215,7 @@ class VueltaData extends Actor with ActorLogging {
     case RiderUpdates => sender ! lastRiderEventSummary.toJson.toString
     case RiderEventsRequest(bibNumber) => {
       val eventList = db.withSession { implicit session =>
-        riderEventTable.filter(_.bibNumber === bibNumber).sortBy(_.timestamp).list
+        riderEventTable.filter(_.bibNumber === bibNumber).sortBy(_.timestamp desc).list
       }
       sender ! RiderEventList(eventList.map ({ x =>
         RiderSummary(x.bibNumber,

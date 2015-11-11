@@ -41,6 +41,7 @@ object VueltaTables {
   case class RiderSummary(bibNumber: Int, name: String, stop: String, timestamp: String, timestampObject: DateTime)
   case class RiderEventList(list: List[RiderSummary])
 
+  val RaceStartHour = 9.0;
   val RestStops = List(
     RestStop("Start", 37.850787, -122.258015),
     RestStop("Moraga", 37.838825, -122.126016),

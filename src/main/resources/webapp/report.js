@@ -19,28 +19,33 @@
 
 $(document).ready(function() {
 
+    var currentExpanded = '';
+
     function updateRiderEvents(e) {
         var bibNumber = e.currentTarget.id.replace('button', '');
-        if (!$('#events' + bibNumber).hasClass('expanded')) {
-            $('#events' + bibNumber).addClass('expanded');
-            $.ajax({
-                type: "GET",
-                url: '/rider/' + bibNumber + '/events',
-                cache: false
-            }).done (function (riderEvents) {
-                for (i = 0; i < riderEvents.length - 1; i++) {
-                    $('#events' + bibNumber).after(
-                        '<tr>' +
-                        '<td></td>' +
-                        '<td></td>' +
-                        '<td></td>' +
-                        '<td>' + riderEvents[i].timestamp + '</td>' +
-                        '<td>' + riderEvents[i].stop + '</td>' +
-                        '</tr>'
-                    );
-                }
-            });
-		}
+        $.ajax({
+            type: "GET",
+            url: '/rider/' + bibNumber + '/events',
+            cache: false
+        }).done (function (riderEvents) {
+            var lowerBound = 1;
+            if (riderEvents.length == 1) lowerBound = 0;
+            var newTable = '';
+            for (i = lowerBound; i < riderEvents.length; i++) {
+                newTable = newTable +
+                    '<tr id="toggle' + bibNumber + '_' + i + '">' +
+                    '<td></td>' +
+                    '<td></td>' +
+                    '<td></td>' +
+                    '<td>' + riderEvents[i].timestamp + '</td>' +
+                    '<td>' + riderEvents[i].stop + '</td>' +
+                    '</tr>';
+            }
+            $('#events' + bibNumber).after(newTable);
+
+        });
+        if (currentExpanded != '') $('[id^=' + currentExpanded + ']').hide();
+        currentExpanded = 'toggle' + bibNumber;
     };
 
     function handleReportSelect() {
