@@ -33,7 +33,7 @@ import spray.json._
 object VueltaData {
 
   val quarterMile = 1.0 / 60.0 / 4.0 // In degrees
-  val WestCoasstId = "America/Los_Angeles"
+  val WestCoastId = "America/Los_Angeles"
   val hhmmssFormatter = DateTimeFormat.forPattern("hh:mm:ss a")
 
   val db = {
