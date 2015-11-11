@@ -33,16 +33,13 @@ import spray.json._
 object VueltaData {
 
   val quarterMile = 1.0 / 60.0 / 4.0 // In degrees
-
+  val WestCoasstId = "America/Los_Angeles"
   val hhmmssFormatter = DateTimeFormat.forPattern("hh:mm:ss a")
 
   val db = {
-    //val mysqlURL = envOrElse("VUELTA_MYSQL_URL", "jdbc:mysql://localhost:3306/vuelta")
-    //val mysqlUser = envOrElse("VUELTA_MYSQL_USER", "root") // vueltauser
-    //val mysqlPassword = envOrElse("VUELTA_MYSQL_PASSWORD", "") // m6gs9yezyuqv
-    val mysqlURL = envOrElse("VUELTA_MYSQL_URL", "jdbc:mysql://mysql.bustos.org:3306/vuelta")
-    val mysqlUser = envOrElse("VUELTA_MYSQL_USER", "vueltauser") // vueltauser
-    val mysqlPassword = envOrElse("VUELTA_MYSQL_PASSWORD", "m6gs9yezyuqv") // m6gs9yezyuqv
+    val mysqlURL = envOrElse("VUELTA_MYSQL_URL", "jdbc:mysql://localhost:3306/vuelta")
+    val mysqlUser = envOrElse("VUELTA_MYSQL_USER", "root")
+    val mysqlPassword = envOrElse("VUELTA_MYSQL_PASSWORD", "")
     Database.forURL(mysqlURL, driver = "com.mysql.jdbc.Driver", user = mysqlUser, password = mysqlPassword)
   }
 }
@@ -221,7 +218,7 @@ class VueltaData extends Actor with ActorLogging {
         RiderSummary(x.bibNumber,
           riders(x.bibNumber).name,
           stopName(x, eventList),
-          hhmmssFormatter.print(x.timestamp.toDateTime(DateTimeZone.forID("America/Los_Angeles"))),
+          hhmmssFormatter.print(x.timestamp.toDateTime(DateTimeZone.forID(WestCoastId))),
           x.timestamp
         )})
       )
