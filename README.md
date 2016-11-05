@@ -15,11 +15,11 @@ To set these in Heroku, you can do the following:
 ```bash
 $ heroku config:set VUELTA_MYSQL_URL=jdbc:mysql://mysql.*****:3306/vuelta
 Setting config vars and restarting vuelta-rider-tracking... done
-VUELTA_MYSQL_URL: jdbc:mysql://mysql.bustos.org:3306/vuelta
+VUELTA_MYSQL_URL: jdbc:mysql://mysql.*****:3306/vuelta
 $ heroku config:set VUELTA_MYSQL_USER=vueltauser
 Setting config vars and restarting vuelta-rider-tracking... done
 VUELTA_MYSQL_USER: vueltauser
-]$ heroku config:set VUELTA_MYSQL_PASSWORD=*****
+$ heroku config:set VUELTA_MYSQL_PASSWORD=*****
 Setting config vars and restarting vuelta-rider-tracking... done
 VUELTA_MYSQL_PASSWORD: *****
 ```

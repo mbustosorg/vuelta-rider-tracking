@@ -23,26 +23,19 @@ import javax.ws.rs.Path
 
 import akka.actor._
 import akka.pattern.ask
-import akka.util.Timeout
-import scala.concurrent.Future
 import com.gettyimages.spray.swagger.SwaggerHttpService
 import com.wordnik.swagger.annotations._
 import com.wordnik.swagger.model.ApiInfo
-import org.bustos.vuelta.VueltaData._
-import org.bustos.vuelta.VueltaTables.{Rider}
+import org.bustos.vuelta.VueltaJsonProtocol._
+import org.bustos.vuelta.VueltaTables.{Rider, _}
 import org.slf4j.LoggerFactory
-import spray.http.DateTime
-import spray.http.{DateTime, HttpCookie}
 import spray.http.MediaTypes._
+import spray.http.StatusCodes._
+import spray.http.{DateTime, HttpCookie}
 import spray.json._
 import spray.routing._
 
-import scala.concurrent.duration._
 import scala.reflect.runtime.universe._
-import VueltaTables._
-import VueltaJsonProtocol._
-import spray.json._
-import spray.http.StatusCodes._
 
 class VueltaServiceActor extends HttpServiceActor with ActorLogging {
 
@@ -55,8 +48,7 @@ class VueltaServiceActor extends HttpServiceActor with ActorLogging {
   def receive = runRoute(
     swaggerService.routes ~
     vueltaRoutes.routes ~
-      get {getFromResourceDirectory("webapp")} ~
-      get {getFromResource("webapp/index.html")})
+      get {getFromResourceDirectory("webapp")})
 
   val swaggerService = new SwaggerHttpService {
     override def apiTypes = Seq(typeOf[VueltaRoutes])
@@ -72,8 +64,9 @@ class VueltaServiceActor extends HttpServiceActor with ActorLogging {
 @Api(value = "/", description = "Primary Interface", produces = "application/json")
 trait VueltaRoutes extends HttpService with UserAuthentication {
 
-  import UserAuthentication._
   import java.net.InetAddress
+
+  import UserAuthentication._
 
   val logger = LoggerFactory.getLogger(getClass)
   val system = ActorSystem("vueltaSystem")
@@ -275,6 +268,30 @@ trait VueltaRoutes extends HttpService with UserAuthentication {
       }
     }
   }
+
+/*  @Path("")
+  @ApiOperation(httpMethod = "GET", response = classOf[String], value = "Bet entry")
+  def restStopCounts = get {
+    path("") {
+      cookie("VUELTA_SESSION") { sessionId => {
+        cookie("VUELTA_USER") { username => {
+          handleRejections(authorizationRejection) {
+            authenticate(authenticateSessionId(sessionId.content, username.content)) { authentication =>
+              getFromResource("webapp/admin.html")
+            }
+          }
+        }
+        }
+      }
+      } ~ getFromResource("webapp/login.html")
+      respondWithMediaType(`application/json`) { ctx =>
+        val future = vueltaData ? RestStopCounts
+        future onSuccess {
+          case x: String => ctx.complete(x)
+        }
+      }
+    }
+  }*/
 
   def reports =
     path("report") {
